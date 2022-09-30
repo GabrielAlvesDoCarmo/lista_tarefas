@@ -17,6 +17,7 @@ class _ToDoListPageState extends State<ToDoListPage> {
   final ToDoRepository toDoRepository = ToDoRepository();
   ToDo? deletedTodo;
   int? deletedPosition;
+  String? errorText;
 
   @override
   void initState() {
@@ -45,10 +46,20 @@ class _ToDoListPageState extends State<ToDoListPage> {
                       flex: 8,
                       child: TextField(
                         controller: todosController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.black,
+                              width: 3,
+                            ),
+                          ),
+                          labelStyle: const TextStyle(
+                            color: Colors.black,
+                          ),
+                          border: const OutlineInputBorder(),
                           labelText: "Adicione uma tarefa",
                           hintText: "Ex. Estudo flutter",
+                          errorText: errorText,
                         ),
                       ),
                     ),
@@ -57,7 +68,7 @@ class _ToDoListPageState extends State<ToDoListPage> {
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        primary: Colors.red,
+                        primary: Colors.black,
                         padding: const EdgeInsets.all(14),
                       ),
                       onPressed: onPressButton,
@@ -94,7 +105,7 @@ class _ToDoListPageState extends State<ToDoListPage> {
                     ElevatedButton(
                       onPressed: removeAll,
                       style: ElevatedButton.styleFrom(
-                          primary: Colors.red, padding: EdgeInsets.all(14)),
+                          primary: Colors.black, padding: EdgeInsets.all(14)),
                       child: const Text("Limpar tudo"),
                     )
                   ],
@@ -110,11 +121,14 @@ class _ToDoListPageState extends State<ToDoListPage> {
   void onPressButton() {
     var todoTitle = todosController.text.toString();
     if (todoTitle.isEmpty) {
-      return;
+      setState(() {
+        errorText = " Campo em branco";
+      });
     } else {
       var todo = ToDo(title: todoTitle, date: DateTime.now());
       setState(() {
         todos.add(todo);
+        errorText = null;
       });
       todosController.clear();
       toDoRepository.saveToDoList(todos);
@@ -145,8 +159,9 @@ class _ToDoListPageState extends State<ToDoListPage> {
                   Navigator.of(context).pop();
                   todos.clear();
                 });
+                toDoRepository.saveToDoList(todos);
               },
-              style: TextButton.styleFrom(primary: Colors.red),
+              style: TextButton.styleFrom(primary: Colors.black),
               child: const Text("Limpar Tudo"),
             )
           ],
@@ -161,17 +176,19 @@ class _ToDoListPageState extends State<ToDoListPage> {
     setState(() {
       todos.remove(todo);
     });
+    toDoRepository.saveToDoList(todos);
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: Colors.white,
         action: SnackBarAction(
-          textColor: Colors.red,
+          textColor: Colors.black,
           label: "Desfazer ação",
           onPressed: () {
             setState(() {
               todos.insert(deletedPosition!, deletedTodo!);
             });
+            toDoRepository.saveToDoList(todos);
           },
         ),
         content: Text(
